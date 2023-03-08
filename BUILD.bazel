@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+# load("@rules_python//python:proto.bzl", "py_proto_library")
 load("@nanopb_pypi//:requirements.bzl", "requirement")
 load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
@@ -35,13 +36,32 @@ copy_file(
     allow_symlink = True,
 )
 
+py_library(
+    name = "nanopb_generator_py",
+    srcs = [
+        "generator/nanopb_generator.py",
+        "generator/proto/__init__.py",
+        "generator/proto/_utils.py",
+        "generator/proto/nanopb_pb2.py",
+    ],
+    data = [
+        "generator/proto/nanopb.proto",
+    ],
+    deps = [
+        # ":descriptor_py_pb2",
+        # ":nanopb_proto_py_pb2",
+        # ":nanopb_proto",
+    ],
+    imports = ["generator"],
+)
+
 py_binary(
     name = "protoc-gen-nanopb",
     srcs = [
-        "generator/nanopb_generator.py",
         ":protoc-gen-nanopb.py",
     ],
     deps = [
+        ":nanopb_generator_py",
         requirement("grpcio-tools"),
     ],
 )
@@ -68,6 +88,11 @@ proto_library(
     strip_import_prefix = "generator/proto/",
 )
 
+# py_proto_library(
+#     name = "descriptor_py_pb2",
+#     deps = [":descriptor"],
+# )
+
 proto_library(
     name = "nanopb_proto",
     srcs = [
@@ -76,6 +101,11 @@ proto_library(
     strip_import_prefix = "generator/proto/",
     deps = [":descriptor"],
 )
+
+# py_proto_library(
+#     name = "nanopb_proto_py_pb2",
+#     deps = [":nanopb_proto"],
+# )
 
 cc_nanopb_proto_library(
     name = "test_compilation",
